@@ -1,0 +1,15 @@
+SELECT  EMAIL FROM CLIENTE where RUT = '11.111.111-1';
+SELECT EMAIL FROM CLIENTE WHERE RUT = '19.232.456-1';
+
+DECLARE
+    v_email CLIENTE.EMAIL%TYPE;
+BEGIN
+    SELECT EMAIL INTO v_email FROM CLIENTE where RUT = '11.111.111-1';
+    DBMS_OUTPUT.PUT_LINE('El email es: ' || v_email);
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        DBMS_OUTPUT.PUT_LINE('Datos inexistentes para la consulta');
+    WHEN TOO_MANY_ROWS THEN
+        DBMS_OUTPUT.PUT_LINE('Muchas filas');
+END;
+/
