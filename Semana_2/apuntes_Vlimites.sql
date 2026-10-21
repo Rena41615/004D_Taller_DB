@@ -9,7 +9,7 @@ BEGIN
      
     DBMS_OUTPUT.PUT_LINE('--- RECORRIENDO ARREGLO ---'); 
      
-    -- 3. Iterar (Ojo: Si en el quiz te piden forzar error, pon un número mayor al límite)
+    -- 3. Iterar (Ojo: se piden forzar error, pon un número mayor al límite)
     FOR i IN 1..6 LOOP 
         DBMS_OUTPUT.PUT_LINE(i || '. ' || v_lista(i)); 
     END LOOP; 

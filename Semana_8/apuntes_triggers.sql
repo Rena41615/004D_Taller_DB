@@ -1,48 +1,33 @@
-/*
-Triggers -> DML
-            ->INSERT -> :NEW
-            ->UPDATE -> :OLD
-                     -> :NEW
-            ->DELETE -> :OLD
-*/
-
-CREATE OR REPLACE TRIGGER trg_auditoria_tabla
-AFTER INSERT OR UPDATE ON NOMBRE_TABLA
-FOR EACH ROW
-BEGIN
-    IF INSERTING THEN
-        DBMS_OUTPUT.PUT_LINE('Se insertó un nuevo registro: ' || :NEW.id_columna);
-    ELSIF UPDATING THEN
-        DBMS_OUTPUT.PUT_LINE('Se actualizó el registro de: ' || :OLD.id_columna || ' a ' || :NEW.id_columna);
-    END IF;
-END;
-/
-
---Los triggers automatizan acciones de fondo, en los controles suelen pedir que actualices un dato automáticamente usando
---los modificadores :NEW y :OLD.
-
-CREATE OR REPLACE TRIGGER TRG_AUDITORIA_TABLA
-AFTER INSERT OR UPDATE ON TABLA_PRINCIPAL
-FOR EACH ROW
+CREATE OR REPLACE TRIGGER TRG_PLANTILLA_AUDITORIA
+AFTER INSERT OR UPDATE OR DELETE ON TABLA_A_VIGILAR
+FOR EACH ROW -- Se ejecuta fila por fila
 DECLARE
-    -- Variables si necesitas hacer cálculos antes de registrar
+    -- Variables útiles para la auditoría
     v_usuario VARCHAR2(50) := USER;
+    v_fecha DATE := SYSDATE;
 BEGIN
+    -- Si el usuario está INSERANDO datos nuevos (:NEW)
     IF INSERTING THEN
-        -- Insertar en una tabla de bitácora el nuevo registro
-        INSERT INTO TABLA_AUDITORIA (accion, id_afectado, fecha, usuario)
-        VALUES ('INSERCIÓN', :NEW.id_pk, SYSDATE, v_usuario);
+        INSERT INTO TABLA_AUDITORIA (accion, id_afectado, fecha, usuario_bd)
+        VALUES ('INSERCIÓN NUEVA', :NEW.id_pk, v_fecha, v_usuario);
         
+    -- Si el usuario está ACTUALIZANDO datos (:OLD vs :NEW)
     ELSIF UPDATING THEN
-        -- Comparar valores viejos y nuevos
+        -- Podemos comparar si un dato específico cambió
         IF :OLD.estado <> :NEW.estado THEN
-            INSERT INTO TABLA_AUDITORIA (accion, id_afectado, fecha, usuario)
-            VALUES ('CAMBIO ESTADO: ' || :OLD.estado || ' a ' || :NEW.estado, :NEW.id_pk, SYSDATE, v_usuario);
+            INSERT INTO TABLA_AUDITORIA (accion, id_afectado, fecha, usuario_bd)
+            VALUES ('CAMBIO DE ESTADO: ' || :OLD.estado || ' a ' || :NEW.estado, :NEW.id_pk, v_fecha, v_usuario);
         END IF;
+        
+    -- Si el usuario está ELIMINANDO datos (:OLD)
+    ELSIF DELETING THEN
+        INSERT INTO TABLA_AUDITORIA (accion, id_afectado, fecha, usuario_bd)
+        VALUES ('ELIMINACIÓN DE REGISTRO', :OLD.id_pk, v_fecha, v_usuario);
     END IF;
+
 EXCEPTION
     WHEN OTHERS THEN
-        -- Ojo: Generalmente los triggers no deberían usar DBMS_OUTPUT, pero evita que la DB falle en un quiz.
-        DBMS_OUTPUT.PUT_LINE('Error en el trigger: ' || SQLERRM);
-END;
+        -- Imprimir error (Ojo: Los triggers de producción no suelen llevar DBMS_OUTPUT, pero para el quiz es excelente)
+        DBMS_OUTPUT.PUT_LINE('Error en el Trigger de Auditoría: ' || SQLERRM);
+END TRG_PLANTILLA_AUDITORIA;
 /

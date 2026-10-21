@@ -1,40 +1,36 @@
---reporte masivo o un cruce de datos complejo (como listar torneos y sus asistentes)
-CREATE OR REPLACE PROCEDURE SP_REPORTE_ANIDADO (p_fecha_filtro DATE) IS
-    -- Cursor Principal (Maestro)
-    CURSOR c_maestro IS
-        SELECT id_maestro, nombre_maestro 
-        FROM TABLA_MAESTRA 
-        WHERE TRUNC(fecha) = p_fecha_filtro;
-        
-    -- Cursor Secundario (Detalle) que recibe el ID del maestro
-    CURSOR c_detalle (p_id NUMBER) IS
-        SELECT detalle_info 
-        FROM TABLA_DETALLE 
-        WHERE id_maestro = p_id;
-        
+CREATE OR REPLACE PROCEDURE SP_PLANTILLA_OPERACION (
+    p_id_entrada IN NUMBER,       -- Dato que ingresa el usuario
+    p_nombre_salida OUT VARCHAR2  -- Dato que el procedimiento devuelve
+) IS
+    -- 1. Declaración de variables y excepciones
     v_contador NUMBER := 0;
-    EX_SIN_REGISTROS EXCEPTION; -- Excepción personalizada
+    EX_ERROR_NEGOCIO EXCEPTION;   -- Excepción personalizada
 BEGIN
-    DBMS_OUTPUT.PUT_LINE('--- INICIO DEL REPORTE ---');
+    DBMS_OUTPUT.PUT_LINE('--- INICIO DEL PROCEDIMIENTO ---');
 
-    FOR reg_m IN c_maestro LOOP
-        DBMS_OUTPUT.PUT_LINE('Maestro: ' || reg_m.nombre_maestro);
-        
-        FOR reg_d IN c_detalle(reg_m.id_maestro) LOOP
-            DBMS_OUTPUT.PUT_LINE(' - Detalle: ' || reg_d.detalle_info);
-            v_contador := v_contador + 1;
-        END LOOP;
-    END LOOP;
+    -- 2. Lógica principal (Ej: Buscar un dato)
+    SELECT columna_nombre INTO p_nombre_salida
+    FROM NOMBRE_TABLA
+    WHERE id_tabla = p_id_entrada;
 
-    -- Disparar excepción si no hubo resultados en total
-    IF v_contador = 0 THEN
-        RAISE EX_SIN_REGISTROS;
+    -- 3. Validaciones de negocio (Ej: Lanzar error si algo no cuadra)
+    IF p_nombre_salida IS NULL THEN
+        RAISE EX_ERROR_NEGOCIO;
     END IF;
 
+    -- 4. Confirmar transacción (si hiciste INSERT/UPDATE)
+    COMMIT;
+    DBMS_OUTPUT.PUT_LINE('Proceso ejecutado correctamente para el ID: ' || p_id_entrada);
+
 EXCEPTION
-    WHEN EX_SIN_REGISTROS THEN
-        DBMS_OUTPUT.PUT_LINE('Alerta: No se encontraron registros para la fecha procesada.');
+    -- 5. Manejo de errores
+    WHEN NO_DATA_FOUND THEN
+        p_nombre_salida := 'No existe';
+        DBMS_OUTPUT.PUT_LINE('Error: El ID ingresado no existe en la base de datos.');
+    WHEN EX_ERROR_NEGOCIO THEN
+        DBMS_OUTPUT.PUT_LINE('Error: No se cumplió la regla de negocio.');
     WHEN OTHERS THEN
-        DBMS_OUTPUT.PUT_LINE('Error: ' || SQLERRM);
-END SP_REPORTE_ANIDADO;
+        ROLLBACK; -- Deshacer cambios si hay un error grave
+        DBMS_OUTPUT.PUT_LINE('Error inesperado: ' || SQLERRM);
+END SP_PLANTILLA_OPERACION;
 /
