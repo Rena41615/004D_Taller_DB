@@ -33,8 +33,8 @@ CREATE OR REPLACE PROCEDURE buscarClientePorId(
 BEGIN
     SELECT nombre, apellido, email, telefono INTO p_nombre,
     p_apellido, p_email, p_telefono
-    FROM
-    WHERE
+    FROM CLIENTE
+    WHERE 
 
 END buscarClientePorId;
 /

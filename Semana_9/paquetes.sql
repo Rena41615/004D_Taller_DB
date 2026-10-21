@@ -1,46 +1,56 @@
 -- ==========================================
--- PARTE 1: ESPECIFICACIÓN (Lo público)
+-- 1. ESPECIFICACIÓN (Lo público: Solo declaras qué existe)
 -- ==========================================
-CREATE OR REPLACE PACKAGE PKG_PLANTILLA_NEGOCIO IS
-    -- Solo declaramos los nombres, no la lógica
-    PROCEDURE SP_ACTUALIZAR_ESTADO (p_id NUMBER);
-    FUNCTION FN_OBTENER_TOTAL (p_cantidad NUMBER) RETURN NUMBER;
-END PKG_PLANTILLA_NEGOCIO;
+CREATE OR REPLACE PACKAGE PKG_PLANTILLA_GENERAL IS
+    -- Declaración de variables globales o constantes
+    V_GLOBAL_TASA NUMBER := 1.19;
+    
+    -- Declaración de firmas de Procedimientos y Funciones
+    PROCEDURE SP_PROCESAR_DATO (P_ID_ENTRADA IN NUMBER);
+    FUNCTION FN_CALCULAR_VALOR (P_MONTO IN NUMBER) RETURN NUMBER;
+END PKG_PLANTILLA_GENERAL;
 /
 
 -- ==========================================
--- PARTE 2: CUERPO (Lo privado y el desarrollo)
+-- 2. CUERPO (Lo privado: Aquí va la lógica real)
 -- ==========================================
-CREATE OR REPLACE PACKAGE BODY PKG_PLANTILLA_NEGOCIO IS
-    
-    -- Elemento Privado: Nadie fuera del package puede ver o usar esta constante
-    C_IMPUESTO CONSTANT NUMBER := 0.19;
+CREATE OR REPLACE PACKAGE BODY PKG_PLANTILLA_GENERAL IS
 
-    -- Desarrollo de la Función Pública
-    FUNCTION FN_OBTENER_TOTAL (p_cantidad NUMBER) RETURN NUMBER IS
-        v_calculo NUMBER;
+    -- Función pública (Desarrollo)
+    FUNCTION FN_CALCULAR_VALOR (P_MONTO IN NUMBER) RETURN NUMBER IS
+        V_RESULTADO NUMBER;
     BEGIN
-        v_calculo := p_cantidad + (p_cantidad * C_IMPUESTO);
-        RETURN v_calculo;
+        IF P_MONTO IS NULL OR P_MONTO <= 0 THEN
+            RETURN 0;
+        END IF;
+        
+        V_RESULTADO := P_MONTO * V_GLOBAL_TASA;
+        RETURN V_RESULTADO;
     EXCEPTION
         WHEN OTHERS THEN
-            RETURN 0;
-    END FN_OBTENER_TOTAL;
+            RETURN -1;
+    END FN_CALCULAR_VALOR;
 
-    -- Desarrollo del Procedimiento Público
-    PROCEDURE SP_ACTUALIZAR_ESTADO (p_id NUMBER) IS
+    -- Procedimiento público (Desarrollo)
+    PROCEDURE SP_PROCESAR_DATO (P_ID_ENTRADA IN NUMBER) IS
+        V_CALCULO_TEMP NUMBER;
     BEGIN
-        UPDATE NOMBRE_TABLA 
-        SET estado = 'ACTUALIZADO' 
-        WHERE id_columna = p_id;
+        -- Puedes usar la función dentro del mismo paquete
+        V_CALCULO_TEMP := FN_CALCULAR_VALOR(1000);
+        
+        UPDATE TABLA_GENERICA 
+        SET COLUMNA_VALOR = V_CALCULO_TEMP 
+        WHERE ID_PK = P_ID_ENTRADA;
         
         COMMIT;
-        DBMS_OUTPUT.PUT_LINE('Se actualizó el ID: ' || p_id);
+        DBMS_OUTPUT.PUT_LINE('Proceso exitoso para el ID: ' || P_ID_ENTRADA);
     EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            DBMS_OUTPUT.PUT_LINE('Error: El dato no existe.');
         WHEN OTHERS THEN
             ROLLBACK;
-            DBMS_OUTPUT.PUT_LINE('Error: ' || SQLERRM);
-    END SP_ACTUALIZAR_ESTADO;
+            DBMS_OUTPUT.PUT_LINE('Error grave: ' || SQLERRM);
+    END SP_PROCESAR_DATO;
 
-END PKG_PLANTILLA_NEGOCIO;
+END PKG_PLANTILLA_GENERAL;
 /

@@ -1,41 +1,32 @@
-/*Inspeccionar tablas, nos sirve cliente, transaccion_pago y reserva_temporal*/
-SELECT * FROM CLIENTE;
-SELECT * FROM TRANSACCION_PAGO;
-SELECT * FROM RESERVA_TEMPORAL;
-
-/*Realizado junto al profesor*/
-
+SET SERVEROUTPUT ON;
 DECLARE
-    TYPE boleta_cliente IS RECORD(
-        nombre_cliente CLIENTE.NOMBRE%TYPE,
-        estado_reserva RESERVA_TEMPORAL.ESTADO%TYPE,
-        monto_bruto TRANSACCION_PAGO.MONTO_BRUTO%TYPE,
-        descuento_transaccion TRANSACCION_PAGO.DESCUENTO%TYPE,
-        monto_final TRANSACCION_PAGO.MONTO_FINAL%TYPE,
-        estado_transaccion TRANSACCION_PAGO.ESTADO%TYPE
+    -- 1. Creamos la estructura de la ficha
+    TYPE TR_FICHA IS RECORD (
+        DATO_TEXTO VARCHAR2(100),
+        DATO_NUMERO NUMBER,
+        DATO_EXTRA VARCHAR2(50)
     );
+    V_REGISTRO TR_FICHA;
+    
+    -- Variable de búsqueda
+    V_BUSQUEDA_ID NUMBER := 10;
 BEGIN
-    SELECT C.NOMBRE, RT.ESTADO AS ESTADO_RESERVA, TP.MONTO_BRUTO, TP.DESCUENTO, TP.MONTO_FINAL, TP.ESTADO AS ESTADO_TRANSACCION
-    INTO  v_boleta.nombre_cliente, v_boleta.estado_reserva, v_boleta.monto_bruto, v_boleta.descuento_transaccion, v_boleta.monto_final,v_boleta.estado_transaccion
-    FROM CLIENTE C
-    INNER JOIN RESERVA_TEMPORAL RT ON C.CLIENTE_ID = RT.CLIENTE_ID
-    INNER JOIN TRANSACCION_PAGO RT ON TP.RESERVA_ID = RT.RESERVA_ID
-    WHERE C.CLIENTE_ID = 1;
-
-    DBMS_OUTPUT.PUT_LINE('************BOLETA PUNTO TICKET************');
-    DBMS_OUTPUT.PUT_LINE('Nombre Cliente: '|| v_boleta.nombre_cliente);
-    DBMS_OUTPUT.PUT_LINE('');
-    DBMS_OUTPUT.PUT_LINE('');
-    DBMS_OUTPUT.PUT_LINE('');
-    DBMS_OUTPUT.PUT_LINE('');
-    DBMS_OUTPUT.PUT_LINE('');
-
-    null;
+    -- 2. Llenamos el RECORD cruzando tablas
+    SELECT T1.NOMBRE, T2.CANTIDAD, T3.DESCRIPCION
+    INTO V_REGISTRO.DATO_TEXTO, V_REGISTRO.DATO_NUMERO, V_REGISTRO.DATO_EXTRA
+    FROM TABLA_UNO T1
+    JOIN TABLA_DOS T2 ON T1.ID_FK = T2.ID_PK
+    JOIN TABLA_TRES T3 ON T1.OTRO_FK = T3.ID_PK
+    WHERE T1.ID_PK = V_BUSQUEDA_ID;
+    
+    -- 3. Imprimimos
+    DBMS_OUTPUT.PUT_LINE('Texto: ' || V_REGISTRO.DATO_TEXTO);
+    DBMS_OUTPUT.PUT_LINE('Número: ' || V_REGISTRO.DATO_NUMERO);
+    
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        DBMS_OUTPUT.PUT_LINE('Error: No se encontró el registro con el ID ingresado.');
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error general: ' || SQLERRM);
 END;
-
-/*Lo que hice yo
-SELECT C.NOMBRE, TP.MONTO_BRUTO, TP.DESCUENTO, TP.MONTO_FINAL, TP.ESTADO
-FROM CLIENTE C, TRANSACCION_PAGO TP
-INNER JOIN RESERVA_TEMPORAL RT ON RT.RESERVA_ID = TP.RESERVA_ID
-ORDER BY;
-*/
+/
