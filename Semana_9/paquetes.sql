@@ -45,3 +45,52 @@ CREATE OR REPLACE PACKAGE BODY pkg_boleteria
     END sp_actualizar_stock;
 END pkg_boleteria;
 /
+
+--==================================================--
+--Los packages son contenedores que agrupan lógicamente tu código. En el quiz te pedirán distinguir
+--entre lo que el usuario puede ejecutar (público) y lo que está oculto (privado)
+--==================================================--
+
+-- 1. ESPECIFICACIÓN (Lo público: Solo se declaran los nombres)
+CREATE OR REPLACE PACKAGE PKG_NOMBRE_NEGOCIO IS
+    -- Declaración de variables globales o procedimientos/funciones públicas
+    PROCEDURE SP_ACTUALIZACION_MASIVA (p_parametro_id NUMBER);
+    FUNCTION FN_CALCULO_ESPECIFICO (p_valor NUMBER) RETURN NUMBER;
+END PKG_NOMBRE_NEGOCIO;
+/
+
+-- 2. CUERPO (Lo privado y la lógica interna)
+CREATE OR REPLACE PACKAGE BODY PKG_NOMBRE_NEGOCIO IS
+    -- Variable/Constante privada (No se puede ver ni modificar desde afuera)
+    C_IMPUESTO CONSTANT NUMBER := 0.19;
+
+    -- Desarrollo de la Función (Retorna un valor)
+    FUNCTION FN_CALCULO_ESPECIFICO (p_valor NUMBER) RETURN NUMBER IS
+        v_resultado NUMBER;
+    BEGIN
+        v_resultado := p_valor + (p_valor * C_IMPUESTO);
+        RETURN v_resultado;
+    EXCEPTION
+        WHEN OTHERS THEN
+            RETURN 0; -- Valor seguro en caso de error
+    END FN_CALCULO_ESPECIFICO;
+
+    -- Desarrollo del Procedimiento (Ejecuta una acción)
+    PROCEDURE SP_ACTUALIZACION_MASIVA (p_parametro_id NUMBER) IS
+        v_total NUMBER;
+    BEGIN
+        -- El procedimiento puede consumir la función privada de arriba
+        v_total := FN_CALCULO_ESPECIFICO(1000);
+        
+        UPDATE NOMBRE_TABLA 
+        SET columna_total = v_total 
+        WHERE id_tabla = p_parametro_id;
+        
+        DBMS_OUTPUT.PUT_LINE('Actualización exitosa para el ID: ' || p_parametro_id);
+    EXCEPTION
+        WHEN OTHERS THEN
+            DBMS_OUTPUT.PUT_LINE('Error inesperado: ' || SQLERRM);
+    END SP_ACTUALIZACION_MASIVA;
+
+END PKG_NOMBRE_NEGOCIO;
+/

@@ -59,3 +59,25 @@ BEGIN
     DBMS_OUTPUT.PUT_LINE('El monto a pagar: ' || v_monto_a_pagar);
 END;
 /
+
+--Úsala cuando te pidan calcular multas, días de atraso o promedios para poder
+--utilizarla dentro de un SELECT tradicional
+
+CREATE OR REPLACE FUNCTION FN_CALCULAR_DIAS (p_fecha_inicio DATE, p_fecha_fin DATE) 
+RETURN NUMBER IS
+    v_dias NUMBER;
+BEGIN
+    -- Validamos nulos para evitar errores
+    IF p_fecha_inicio IS NULL OR p_fecha_fin IS NULL THEN
+        RETURN 0;
+    END IF;
+
+    -- Lógica matemática (Ejemplo: diferencia de días)
+    v_dias := TRUNC(p_fecha_fin) - TRUNC(p_fecha_inicio);
+    
+    RETURN v_dias;
+EXCEPTION
+    WHEN OTHERS THEN
+        RETURN -1; -- Código de error estándar
+END FN_CALCULAR_DIAS;
+/
