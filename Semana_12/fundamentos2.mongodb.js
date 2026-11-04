@@ -24,3 +24,24 @@ db.perfiles.countDocuments(
     seccion : "004D"
   }
 );
+
+use("directori_talento")
+db.perfiles.distinct("seccion");
+//1. Bloquear duplicados:
+//se dbe crear un indice unico de la coleccion
+
+use("directorio_talento");
+db.instagram.insertOne({
+    account : "pepito"
+});
+
+use("directorio_talento");
+db.instagram.find();
+
+use("directorio_talento");
+db.instagram.createIndex({"account":1},{
+unique:true});
+
+//Tarea: ver esquemas, ptt documento word de todos los comandos que
+//salen en la presentacion, profundizar, investigar que hace cada cosa
+//hasta el domingo 8 a las 23:59pm
