@@ -42,7 +42,17 @@ db.ofertas.insertMany(
 
 //Operador igual a
 use('directorio_talento');
+db.ofertas.find(
+    {
+        modalidad : /presencial/i
+    }
+);
 
+db.ofertas.find(
+    {
+        cargo : /^cient[ií]fico/i
+    }
+);
 //Operador $GT
 
 use('directorio_talento');
